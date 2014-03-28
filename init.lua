@@ -1,4 +1,7 @@
-local player_in_bed = 0
+
+-- Table of players currently in bed
+--   key = player name, value = the bed node position
+local players_in_bed = {}
 
 local beds_list = {
 	{ "Red Bed", "red"},
@@ -67,6 +70,19 @@ for i in ipairs(beds_list) do
 			
 		on_destruct = function(pos)
 			local node = minetest.env:get_node(pos)
+
+			-- If there's a player in a destroyed/dug bed, they need removing
+			for playername, bedpos in pairs(players_in_bed) do
+				if vector.equals(bedpos, pos) then
+					players_in_bed[playername] = nil
+					local player = minetest.get_player_by_name(playername)
+					if player then
+						player:setpos(beds_player_spawns[playername])
+						player:set_physics_override(1, 1, 1)
+					end
+				end
+			end
+
 			local param2 = node.param2
 			if param2 == 0 then
 				pos.z = pos.z+1
@@ -82,6 +98,7 @@ for i in ipairs(beds_list) do
 					minetest.env:remove_node(pos)
 				end	
 			end
+
 		end,
 		
 		on_rightclick = function(pos, node, clicker)
@@ -109,7 +126,7 @@ for i in ipairs(beds_list) do
 				clicker:setpos(beds_player_spawns[playername])
 				clicker:set_physics_override(1, 1, 1)
 				meta:set_string("player", "")
-				player_in_bed = player_in_bed - 1
+				players_in_bed[playername] = nil
 
 			elseif bedplayer == "" then
 
@@ -121,6 +138,9 @@ for i in ipairs(beds_list) do
 					file:write(minetest.serialize(beds_player_spawns))
 					file:close()
 				end
+
+				meta:set_string("player", playername)
+				players_in_bed[playername] = vector.new(pos)
 
 				pos.y = pos.y - 1
 				clicker:set_physics_override(0, 0, 0)
@@ -135,8 +155,6 @@ for i in ipairs(beds_list) do
 					clicker:set_look_yaw(1.5*math.pi)
 				end
 				
-				meta:set_string("player", playername)
-				player_in_bed = player_in_bed + 1
 
 			end
 		end
@@ -203,16 +221,29 @@ end
 local timer = 0
 local wait = false
 minetest.register_globalstep(function(dtime)
-	if timer<2 then
+
+	if wait then return end
+
+	if timer < 4 then
 		timer = timer+dtime
 		return
 	end
 	timer = 0
-	
-	local players = #minetest.get_connected_players()
-	if players == player_in_bed and players ~= 0 then
-		if minetest.env:get_timeofday() < 0.2 or minetest.env:get_timeofday() > 0.805 then
-			if not wait then
+
+	if minetest.env:get_timeofday() < 0.2 or minetest.env:get_timeofday() > 0.805 then
+
+		local players = minetest.get_connected_players()
+		-- Don't want to do this when nobody is online...
+		if #players > 0 then
+			allinbed = true
+			for _, player in pairs(players) do
+				if not players_in_bed[player:get_player_name()] then
+					allinbed = false
+					break
+				end
+			end
+
+			if allinbed then
 				minetest.chat_send_all("Good night!!!")
 				minetest.after(2, function()
 					minetest.env:set_timeofday(0.23)
@@ -220,14 +251,29 @@ minetest.register_globalstep(function(dtime)
 				end)
 				wait = true
 			end
+
 		end
 	end
 end)
 
+local remove_from_bed = function(playername)
+	if players_in_bed[playername] then
+		local meta = minetest.get_meta(players_in_bed[playername])
+		meta:set_string("player", "")
+		players_in_bed[player] = nil
+	end
+end
+
+minetest.register_on_leaveplayer(function(player)
+	local playername = player:get_player_name()
+	remove_from_bed(playername)
+end)
+
 minetest.register_on_respawnplayer(function(player)
-	local name = player:get_player_name()
-	if beds_player_spawns[name] then
-		player:setpos(beds_player_spawns[name])
+	local playername = player:get_player_name()
+	remove_from_bed(playername)
+	if beds_player_spawns[playername] then
+		player:setpos(beds_player_spawns[playername])
 		return true
 	end
 	return false
