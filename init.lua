@@ -15,6 +15,22 @@ local beds_list = {
 	{ "White Bed", "white"},
 }
 
+local remove_from_bed = function(player)
+	local playername = player:get_player_name()
+	if players_in_bed[playername] then
+		local meta = minetest.get_meta(players_in_bed[playername])
+		meta:set_string("player", "")
+		players_in_bed[player] = nil
+
+		player:setpos(beds_player_spawns[playername])
+		if health then
+			health.set_attr(playername, "asleep", 0)
+		else
+			player:set_physics_override(1, 1, 1)
+		end
+	end
+end
+
 for i in ipairs(beds_list) do
 	local beddesc = beds_list[i][1]
 	local colour = beds_list[i][2]
@@ -74,12 +90,8 @@ for i in ipairs(beds_list) do
 			-- If there's a player in a destroyed/dug bed, they need removing
 			for playername, bedpos in pairs(players_in_bed) do
 				if vector.equals(bedpos, pos) then
-					players_in_bed[playername] = nil
 					local player = minetest.get_player_by_name(playername)
-					if player then
-						player:setpos(beds_player_spawns[playername])
-						player:set_physics_override(1, 1, 1)
-					end
+					remove_from_bed(player)
 				end
 			end
 
@@ -108,25 +120,12 @@ for i in ipairs(beds_list) do
 
 			local playername = clicker:get_player_name()
 
-			local meta = minetest.env:get_meta(pos)
+			local meta = minetest.get_meta(pos)
 			local bedplayer = meta:get_string("player")
-			local param2 = node.param2
-			if param2 == 0 then
-				pos.z = pos.z+1
-			elseif param2 == 1 then
-				pos.x = pos.x+1
-			elseif param2 == 2 then
-				pos.z = pos.z-1
-			elseif param2 == 3 then
-				pos.x = pos.x-1
-			end
 
 			if playername == bedplayer then
 
-				clicker:setpos(beds_player_spawns[playername])
-				clicker:set_physics_override(1, 1, 1)
-				meta:set_string("player", "")
-				players_in_bed[playername] = nil
+				remove_from_bed(clicker)
 
 			elseif bedplayer == "" then
 
@@ -142,19 +141,28 @@ for i in ipairs(beds_list) do
 				meta:set_string("player", playername)
 				players_in_bed[playername] = vector.new(pos)
 
-				pos.y = pos.y - 1
-				clicker:set_physics_override(0, 0, 0)
-				clicker:setpos(pos)
+				if health then
+					health.set_attr(playername, "asleep", 1)
+				else
+					clicker:set_physics_override(0, 0, 0)
+				end
+
+				local param2 = node.param2
 				if param2 == 0 then
+					pos.z = pos.z+1
 					clicker:set_look_yaw(math.pi)
 				elseif param2 == 1 then
+					pos.x = pos.x+1
 					clicker:set_look_yaw(0.5*math.pi)
 				elseif param2 == 2 then
+					pos.z = pos.z-1
 					clicker:set_look_yaw(0)
 				elseif param2 == 3 then
+					pos.x = pos.x-1
 					clicker:set_look_yaw(1.5*math.pi)
 				end
-				
+				pos.y = pos.y - 1
+				clicker:setpos(pos)
 
 			end
 		end
@@ -256,22 +264,22 @@ minetest.register_globalstep(function(dtime)
 	end
 end)
 
-local remove_from_bed = function(playername)
-	if players_in_bed[playername] then
-		local meta = minetest.get_meta(players_in_bed[playername])
-		meta:set_string("player", "")
-		players_in_bed[player] = nil
+minetest.register_on_shutdown(function(player)
+	local players = minetest.get_connected_players()
+	for _, player in pairs(players) do
+		if players_in_bed[player:get_player_name()] then
+			remove_from_bed(player)
+		end
 	end
-end
+end)
 
 minetest.register_on_leaveplayer(function(player)
-	local playername = player:get_player_name()
-	remove_from_bed(playername)
+	remove_from_bed(player)
 end)
 
 minetest.register_on_respawnplayer(function(player)
 	local playername = player:get_player_name()
-	remove_from_bed(playername)
+	remove_from_bed(player)
 	if beds_player_spawns[playername] then
 		player:setpos(beds_player_spawns[playername])
 		return true
