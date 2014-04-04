@@ -1,7 +1,16 @@
+-- Boilerplate to support localized strings if intllib mod is installed.
+local S
+if intllib then
+	S = intllib.Getter()
+else
+	S = function(s) return s end
+end
 
 -- Table of players currently in bed
 --   key = player name, value = the bed node position
 local players_in_bed = {}
+
+local player_in_bed = 0
 
 local beds_list = {
 	{ "Red Bed", "red"},
@@ -36,7 +45,7 @@ for i in ipairs(beds_list) do
 	local colour = beds_list[i][2]
 
 	minetest.register_node("beds:bed_bottom_"..colour, {
-		description = beddesc,
+		description = S(beddesc),
 		drawtype = "nodebox",
 		tiles = {"beds_bed_top_bottom_"..colour..".png", "default_wood.png",  "beds_bed_side_"..colour..".png",  "beds_bed_side_"..colour..".png",  "beds_bed_side_"..colour..".png",  "beds_bed_side_"..colour..".png"},
 		paramtype = "light",
@@ -200,7 +209,7 @@ for i in ipairs(beds_list) do
 	minetest.register_alias("beds:bed_"..colour, "beds:bed_bottom_"..colour)
 	
 	minetest.register_craft({
-		output = "beds:bed_"..colour,
+		output = "beds:bed_bottom_"..colour,
 		recipe = {
 			{"wool:"..colour, "wool:"..colour, "wool:white", },
 			{"default:stick", "", "default:stick", }
@@ -254,7 +263,7 @@ minetest.register_globalstep(function(dtime)
 			end
 
 			if allinbed then
-				minetest.chat_send_all("Good night!!!")
+				minetest.chat_send_all(S("Good night!!!"))
 				minetest.after(2, function()
 					minetest.env:set_timeofday(0.23)
 					wait = false
@@ -290,6 +299,6 @@ minetest.register_on_respawnplayer(function(player)
 end)
 
 if minetest.setting_get("log_mods") then
-	minetest.log("action", "beds loaded")
+	minetest.log("action", S("beds loaded"))
 end
 
