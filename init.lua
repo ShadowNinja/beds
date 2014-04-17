@@ -163,7 +163,7 @@ for i in ipairs(beds_list) do
 					pos.x = pos.x-1
 					clicker:set_look_yaw(1.5*math.pi)
 				end
-				pos.y = pos.y - 1
+				pos.y = pos.y - 0.5
 				clicker:setpos(pos)
 
 			end
