@@ -91,7 +91,9 @@ for i in ipairs(beds_list) do
 			for playername, bedpos in pairs(players_in_bed) do
 				if vector.equals(bedpos, pos) then
 					local player = minetest.get_player_by_name(playername)
-					remove_from_bed(player)
+					if player then
+						remove_from_bed(player)
+					end
 				end
 			end
 
