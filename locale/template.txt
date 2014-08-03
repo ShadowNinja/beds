@@ -9,5 +9,5 @@ Violet Bed =
 Black Bed = 
 Grey Bed = 
 White Bed = 
-Good night!!! = 
-beds loaded = 
+Good night! = 
+[beds] Loaded. = 

@@ -1,4 +1,4 @@
-# Translation by Xanthin
+# German translation of beds by Xanthin
 
 Red Bed = Rotes Bett
 Orange Bed = Oranges Bett
@@ -9,5 +9,6 @@ Violet Bed = Violettes Bett
 Black Bed = Schwarzes Bett
 Grey Bed = Graues Bett
 White Bed = Weisses Bett
-Good night!!! = Gute Nacht!!!
-beds loaded = [beds] geladen
+Good night! = Gute Nacht!
+[beds] Loaded. = [beds] Geladen.
+
