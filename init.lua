@@ -109,6 +109,13 @@ local function get_top_pos(pos, rot)
 end
 
 
+local groups = {
+	snappy = 1,
+	choppy = 2,
+	oddly_breakable_by_hand = 2,
+	flammable = 3,
+	fall_damage_add_percent = -25,
+}
 for i, bed in ipairs(beds_list) do
 	local color = bed[2]
 
@@ -123,7 +130,7 @@ for i, bed in ipairs(beds_list) do
 		paramtype = "light",
 		paramtype2 = "facedir",
 		stack_max = 1,
-		groups = {snappy=1, choppy=2, oddly_breakable_by_hand=2, flammable=3},
+		groups = groups,
 		sounds = default.node_sound_wood_defaults(),
 		node_box = {
 			type = "fixed",
@@ -231,7 +238,7 @@ for i, bed in ipairs(beds_list) do
 			"default_wood.png^beds_bed_side_"..color..".png"},
 		paramtype = "light",
 		paramtype2 = "facedir",
-		groups = {snappy=1,choppy=2,oddly_breakable_by_hand=2,flammable=3},
+		groups = groups,
 		sounds = default.node_sound_wood_defaults(),
 		node_box = {
 			type = "fixed",
